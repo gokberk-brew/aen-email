@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace AdanaEnglishNights
 {
     using System.Collections.Generic;
@@ -11,20 +13,21 @@ namespace AdanaEnglishNights
         
         public static void ProcessAllApplicants(string filePath)
         {
-            using (var reader = new StreamReader(filePath))
+            // Ensure the correct encoding is used for reading Turkish characters
+            using (var reader = new StreamReader(filePath, Encoding.UTF8))
             {
-                // Skip the header line
-                reader.ReadLine();
+                int i = 0;
 
                 while (!reader.EndOfStream)
                 {
                     var line = reader.ReadLine();
                     var values = line.Split(',');
+                    i += 1;
 
                     // Create a new Applicant object and populate its properties
                     var applicant = new Applicant
                     {
-                        Timestamp = values[0],
+                        Id = i,
                         NameSurname = values[1],
                         Age = int.TryParse(values[2], out var age) ? age : 0,
                         Occupation = values[3],
@@ -62,10 +65,10 @@ namespace AdanaEnglishNights
         
         public static bool IsBanned(Applicant applicant, List<Tuple<string, string>> bannedUsers)
         {
-            // Check if the applicant is in the banned list
+            // Check if the applicant is in the banned list, with culture-aware comparison
             return bannedUsers.Any(b => 
-                b.Item1.Trim().Equals(applicant.NameSurname.Trim(), StringComparison.OrdinalIgnoreCase) &&
-                b.Item2.Trim().Equals(applicant.EmailAddress.Trim(), StringComparison.OrdinalIgnoreCase));
+                b.Item1.Trim().Equals(applicant.NameSurname.Trim(), StringComparison.CurrentCultureIgnoreCase) &&
+                b.Item2.Trim().Equals(applicant.EmailAddress.Trim(), StringComparison.CurrentCultureIgnoreCase));
         }
         
     }
