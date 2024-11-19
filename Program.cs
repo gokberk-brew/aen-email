@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using AdanaEnglishNights;
 
-string applicantsFilePath = @"C:\Users\gokbe\OneDrive\Belgeler\Repos\AdanaEnglishNights\CSV\16.10.24.csv";
-string rejectedFilePath = @"C:\Users\gokbe\OneDrive\Belgeler\Repos\AdanaEnglishNights\CSV\9.10.24-Rejected.csv";
+string applicantsFilePath = @"C:\Users\gokbe\OneDrive\Belgeler\Repos\AdanaEnglishNights\CSV\Adana English Nights  2020-2024 (Responses) - template.csv";
+string rejectedFilePath = @"C:\Users\gokbe\OneDrive\Belgeler\Repos\AdanaEnglishNights\CSV\Adana English Nights  2020-2024 (Responses) - rej_temp.csv";
 
 List<Tuple<string, string>> bannedUsers = new List<Tuple<string, string>>()
 {
@@ -19,8 +19,8 @@ ReadCsv.ProcessAllApplicants(applicantsFilePath);
 ReadCsv.GetRejectedEmails(rejectedFilePath);
 
 // The desired number of applicants
-int desiredWomenCount = 55;
-int desiredMenCount = 30;
+int desiredWomenCount = 50;
+int desiredMenCount = 25;
 
 // Get the list of applicants
 var applicants = ReadCsv.Applicants;
@@ -29,19 +29,26 @@ var lastWeekRejectedEmails = ReadCsv.RejectedEmails;
 // Ensure distinct applicants based on EmailAddress
 var distinctApplicants = applicants.DistinctBy(x => x.EmailAddress).ToList();
 
-// Add rejected applicants to the results, ensuring they are not banned
+// Add rejected applicants to the results, ensuring they are not banned and apply age restriction for males
 resultApplicants.AddRange(distinctApplicants.Where(x => 
     lastWeekRejectedEmails.Contains(x.EmailAddress) && 
-    !ReadCsv.IsBanned(x, bannedUsers)));
+    !ReadCsv.IsBanned(x, bannedUsers) &&
+    (!x.Gender.Trim().Equals("Male", StringComparison.OrdinalIgnoreCase) || (x.Age <= 25 && x.Age >= 18))
+));
 
 // Exclude banned users
 var bannedExcluded = distinctApplicants.Where(x => 
     !ReadCsv.IsBanned(x, bannedUsers)).ToList();
 
 // Filter internationals (not from Turkey or Turks and Caicos Islands or StringEmpty)
+// and also apply the age filter for males
 var internationals = bannedExcluded.Where(x => 
-    x.Country != "Turkey" && x.Country != "Turks and Caicos Islands" && x.Country != String.Empty).ToList();
-resultApplicants.AddRange(internationals);
+    x.Country != "Turkey" && 
+    x.Country != "Turks and Caicos Islands" && 
+    x.Country != String.Empty && 
+    (!x.Gender.Trim().Equals("Male", StringComparison.OrdinalIgnoreCase) || (x.Age <= 25 && x.Age >= 18))
+).ToList();
+
 
 // Filter out internationals from the remaining applicants
 var internationalsExcluded = bannedExcluded.Where(x => 
@@ -57,8 +64,11 @@ var femaleApplicants = internationalsExcluded
 var maleApplicants = internationalsExcluded
     .Where(x => 
         x.Gender.Trim().Equals("Male", StringComparison.OrdinalIgnoreCase) && 
+        x.Age <= 25 && 
+        x.Age >= 18 &&
         !lastWeekRejectedEmails.Contains(x.EmailAddress.Trim()))
     .ToList();
+
 
 var resWomanCount = resultApplicants.Count(x => !x.Gender.Trim().Equals("Male", StringComparison.OrdinalIgnoreCase));
 var resMenCount = resultApplicants.Count(x => x.Gender.Trim().Equals("Male", StringComparison.OrdinalIgnoreCase));
@@ -89,8 +99,8 @@ Console.WriteLine("Number of total applicants " + distinctApplicants);
 Console.WriteLine("Number of rejected applicants: " + rejectedApplicants.Count);
 Console.WriteLine("Number of accepted applicants: " + acceptedApplicants.Count);
 
-string filePathAccept= @"C:\Users\gokbe\OneDrive\Belgeler\Repos\AdanaEnglishNights\CSV\16.10.24_AcceptedApplications.csv";
-string filePathRej = @"C:\Users\gokbe\OneDrive\Belgeler\Repos\AdanaEnglishNights\CSV\16.10.24_RejectedApplications.csv";
+string filePathAccept= @"C:\Users\gokbe\OneDrive\Belgeler\Repos\AdanaEnglishNights\CSV\20.11.24_AcceptedApplications.csv";
+string filePathRej = @"C:\Users\gokbe\OneDrive\Belgeler\Repos\AdanaEnglishNights\CSV\20.11.24_RejectedApplications.csv";
 
 
 // Write Accepted
